@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantabangan - Barangay Liberty Hazard Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    .legend {
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .legend span {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
+    }
+    .poi-marker {
+      background: #007bff;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      border: 2px solid white;
+    }
+    .speed-bump {
+      background: orange;
+      border-radius: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize map centered on Barangay Liberty
+    const map = L.map('map').setView([15.813, 121.144], 15);
+
+    // Base layers
+    const streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const satellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains:['mt0','mt1','mt2','mt3'],
+      attribution: '© Google Satellite'
+    });
+
+    const terrain = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: '© OpenTopoMap'
+    });
+
+    // POIs
+    const pois = [
+      { name: "Barangay Liberty Center", coords: [15.813, 121.144] },
+      { name: "Pantabangan Dam", coords: [15.815, 121.154] },
+      { name: "View Deck", coords: [15.820, 121.150] }
+    ];
+    pois.forEach(poi => {
+      L.marker(poi.coords, {
+        icon: L.divIcon({ className: 'poi-marker' })
+      }).addTo(map).bindPopup(`<b>${poi.name}</b>`);
+    });
+
+    // Speed bumps (placeholder)
+    const bumps = [
+      { name: "Speed Bump 1", coords: [15.8135, 121.145] },
+      { name: "Speed Bump 2", coords: [15.8125, 121.143] }
+    ];
+    bumps.forEach(bump => {
+      L.marker(bump.coords, {
+        icon: L.divIcon({ className: 'speed-bump' })
+      }).addTo(map).bindPopup(`<b>${bump.name}</b>`);
+    });
+
+    // Hazards layers
+    // Flood-prone zone (approx area near dam spillway/lowland)
+    const floodZone = L.circle([15.814, 121.148], {
+      radius: 400,
+      color: "blue",
+      fillColor: "blue",
+      fillOpacity: 0.3
+    }).bindPopup("Flood-Prone Zone (approx, near reservoir)");
+
+    // Landslide-prone slopes (sample polygon, adjust coordinates if you have slope data)
+    const landslideZone = L.polygon([
+      [15.818, 121.140],
+      [15.819, 121.145],
+      [15.817, 121.146],
+      [15.816, 121.142]
+    ], {
+      color: "brown",
+      fillColor: "brown",
+      fillOpacity: 0.4
+    }).bindPopup("Landslide-Prone Area (steep slopes)");
+
+    // Earthquake risk note (approximate circle - high hazard zone)
+    const quakeZone = L.circle([15.813, 121.144], {
+      radius: 600,
+      color: "purple",
+      fillColor: "purple",
+      fillOpacity: 0.2
+    }).bindPopup("High Earthquake Hazard Zone (general)");
+
+    // Drought / exposed ruins (old town site when dam water drops)
+    const droughtZone = L.circle([15.812, 121.150], {
+      radius: 300,
+      color: "orange",
+      fillColor: "orange",
+      fillOpacity: 0.3
+    }).bindPopup("Possible Exposed Old Pantabangan Town (during drought)");
+
+    // Add hazards to map (grouped)
+    const hazardLayers = {
+      "Flood Zone": floodZone,
+      "Landslide Zone": landslideZone,
+      "Earthquake Hazard": quakeZone,
+      "Drought/Exposure": droughtZone
+    };
+    Object.values(hazardLayers).forEach(layer => layer.addTo(map));
+
+    // Layer control
+    const baseMaps = {
+      "Streets": streets,
+      "Satellite": satellite,
+      "Terrain": terrain
+    };
+    L.control.layers(baseMaps, hazardLayers).addTo(map);
+
+    // Legend
+    const legend = L.control({position: 'bottomright'});
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = `
+        <h4>Legend</h4>
+        <div><span style="background:#007bff"></span>POI</div>
+        <div><span style="background:orange"></span>Speed Bump</div>
+        <div><span style="background:blue"></span>Flood Zone</div>
+        <div><span style="background:brown"></span>Landslide Zone</div>
+        <div><span style="background:purple"></span>Earthquake Hazard</div>
+        <div><span style="background:orange; border:1px solid #333"></span>Drought/Exposure</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  </script>
+</body>
+</html>
